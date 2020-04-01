@@ -27,13 +27,13 @@ import org.json.JSONObject;
 /**
  * Azure Functions with HTTP Trigger.
  */
-public class AzureFaceFunction {
+public class AzureVerifyFunction {
     /**
      * This function listens at endpoint "/api/hello". Two ways to invoke it using "curl" command in bash:
      * 1. curl -d "HTTP Body" {your host}/api/hello
      * 2. curl {your host}/api/hello?name=HTTP%20Query
      */
-    @FunctionName("AzureFace")
+    @FunctionName("AzureVerify")
     public HttpResponseMessage run(
             @HttpTrigger(name = "req", methods = {HttpMethod.GET, HttpMethod.POST}, authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Optional<String>> request,
             final ExecutionContext context) {
@@ -41,8 +41,10 @@ public class AzureFaceFunction {
 
 
         // Parse query parameter
-        String query = request.getQueryParameters().get("name");
-        String name = request.getBody().orElse(query);
+        String faceId1 = request.getQueryParameters().get("faceId1");
+        String faceId2 = request.getQueryParameters().get("faceId2");
+        
+        context.getLogger().info(faceId1 + "|"+ faceId2);
         String jsonString = null;
  
         StringBuffer html = new StringBuffer();
@@ -50,7 +52,7 @@ public class AzureFaceFunction {
         File sourceFile = null;
 
         final String subscriptionKey = "35f6122e6c324d569c6273e2c2952b50";
-        final String uriBase = "https://eastasia.api.cognitive.microsoft.com/face/v1.0/detect";
+        final String uriBase = "https://eastasia.api.cognitive.microsoft.com/face/v1.0/verify";
         final String storageConnectionString ="DefaultEndpointsProtocol=http;" + "AccountName=wooccstorage;" + "AccountKey=qRM2Cpcx8AuQkJiVHFaXIAeix5TVgBaAQ/yD9OfZyloVzZKjX6gH154zB4jS6900OPBeZ6mP3tw7yjWJgB4NKw==";
 
         HttpClient httpclient = new DefaultHttpClient();
@@ -58,11 +60,6 @@ public class AzureFaceFunction {
         try
         {
             URIBuilder builder = new URIBuilder(uriBase);
-
-            // Request parameters. All of them are optional.
-            builder.setParameter("returnFaceId", "true");
-            builder.setParameter("returnFaceLandmarks", "false");
-            builder.setParameter("returnFaceAttributes", "age,gender,headPose,smile,facialHair,glasses,emotion,hair,makeup,occlusion,accessories,blur,exposure,noise");
 
             // Prepare the URI for the REST API call.
             URI uri = builder.build();
@@ -73,7 +70,9 @@ public class AzureFaceFunction {
             postRequest.setHeader("Ocp-Apim-Subscription-Key", subscriptionKey);
 
             // Request body.
-            StringEntity reqEntity = new StringEntity("{\"url\":\"https://wooccstorage.blob.core.windows.net/www/" + name + "\"}");
+            String ent = "{\"faceId1\":\"" + faceId1 + "\", \n\"faceId2\":\"" + faceId2 + "\"}";
+            context.getLogger().info("ent="+ent);
+            StringEntity reqEntity = new StringEntity(ent);
             postRequest.setEntity(reqEntity);
 
             // Execute the REST API call and get the response entity.
@@ -107,7 +106,7 @@ public class AzureFaceFunction {
             context.getLogger().info(e.getMessage());
         }
 
-        if (name == null) {
+        if (faceId1 == null) {
             return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Please pass a name on the query string or in the request body").build();
         } else {
             return request.createResponseBuilder(HttpStatus.OK).body(html.toString()).build();
