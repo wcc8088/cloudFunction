@@ -20,8 +20,8 @@ public class AzureBlobFunction {
      * 2. curl {your host}/api/hello?name=HTTP%20Query
      */
     @FunctionName("BlobSize")
-    @StorageAccount("DefaultEndpointsProtocol=https;AccountName=wooccstorage;AccountKey=qRM2Cpcx8AuQkJiVHFaXIAeix5TVgBaAQ/yD9OfZyloVzZKjX6gH154zB4jS6900OPBeZ6mP3tw7yjWJgB4NKw==;EndpointSuffix=core.windows.net")
-    public HttpResponseMessage blobSize(@HttpTrigger(name = "req", methods = {HttpMethod.GET}, authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Optional<String>> request, @BlobInput(name = "file", dataType = "binary", path = "$web/{Query.file}") byte[] content, final ExecutionContext context) 
+    @StorageAccount("Storage_Account_Connection_String")
+    public HttpResponseMessage blobSize(@HttpTrigger(name = "req", methods = {HttpMethod.GET}, authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Optional<String>> request, @BlobInput(name = "file", dataType = "binary", path = "www/{Query.file}") byte[] content, final ExecutionContext context) 
     {
         // build HTTP response with size of requested blob
         return request.createResponseBuilder(HttpStatus.OK).body("The size of \"" + request.getQueryParameters().get("file") + "\" is: " + content.length + " bytes").build();
